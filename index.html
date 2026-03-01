@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Miko AI</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0A0A0F;
+  --primary: #6C5CE7;
+  --primary-dark: #5A4BD1;
+  --card: #16161F;
+  --card2: #1E1E2A;
+  --text: #FFFFFF;
+  --text2: #8E8E9A;
+  --danger: #FF4757;
+  --green: #2ED573;
+  --pink: #FD79A8;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+.page { display: none; min-height: 100vh; padding-bottom: 80px; }
+.page.active { display: block; }
+.page.no-tab { padding-bottom: 0; }
+
+/* Bottom Tab Bar */
+.tab-bar {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px; height: 70px;
+  background: #111118; border-top: 1px solid #222;
+  display: flex; align-items: center; justify-content: space-around;
+  padding-bottom: 8px; z-index: 100;
+}
+.tab-item {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--text2); font-size: 10px; cursor: pointer; border: none; background: none;
+  transition: color .2s;
+}
+.tab-item.active { color: var(--primary); }
+.tab-item svg { width: 24px; height: 24px; }
+.tab-center {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--primary); display: flex; align-items: center; justify-content: center;
+  margin-top: -20px; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(108,92,231,.5);
+}
+.tab-center svg { width: 28px; height: 28px; fill: white; }
+
+/* Buttons */
+.btn {
+  width: 100%; padding: 14px; border-radius: 12px; border: none;
+  font-size: 16px; font-weight: 600; cursor: pointer;
+  transition: transform .1s, opacity .1s;
+}
+.btn:active { transform: scale(.97); opacity: .8; }
+.btn-primary { background: var(--primary); color: white; }
+.btn-outline { background: transparent; border: 1px solid #333; color: white; }
+.btn-danger { background: linear-gradient(135deg, #FF4757, #FF6B81); color: white; }
+
+/* Lang Toggle */
+.lang-toggle {
+  position: fixed; top: 12px; right: 12px; z-index: 200;
+  background: var(--card2); border: 1px solid #333; border-radius: 20px;
+  padding: 6px 12px; color: white; font-size: 12px; cursor: pointer;
+  backdrop-filter: blur(10px);
+}
+
+/* ===== LOGIN PAGE ===== */
+.login-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+  padding: 4px; opacity: .6;
+}
+.login-grid-item {
+  height: 120px; border-radius: 8px; overflow: hidden;
+}
+.login-grid-item img { width: 100%; height: 100%; object-fit: cover; }
+.grid-placeholder {
+  width: 100%; height: 100%;
+  background: linear-gradient(135deg, #2a1a3e, #1a2a4e);
+}
+.gp2 { background: linear-gradient(135deg, #3a1a2e, #1a3a3e); }
+.gp3 { background: linear-gradient(135deg, #1a2a3e, #2a3a1e); }
+.gp4 { background: linear-gradient(135deg, #2a2a4e, #4e1a2a); }
+.gp5 { background: linear-gradient(135deg, #1a4a3e, #3a1a4e); }
+.gp6 { background: linear-gradient(135deg, #4a2a1e, #1a2a4e); }
+
+.login-content {
+  text-align: center; padding: 30px 24px;
+}
+.login-logo {
+  width: 64px; height: 64px; margin: 0 auto 12px;
+  background: linear-gradient(135deg, var(--primary), var(--pink));
+  border-radius: 16px; display: flex; align-items: center; justify-content: center;
+  font-size: 28px; font-weight: bold; color: white;
+}
+.login-brand { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+.login-sub { color: var(--text2); font-size: 14px; margin-bottom: 30px; }
+.login-buttons { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.login-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  padding: 14px; border-radius: 12px; border: 1px solid #333;
+  background: var(--card); color: white; font-size: 15px; cursor: pointer;
+  transition: transform .1s;
+}
+.login-btn:active { transform: scale(.97); }
+.login-btn .icon { font-size: 20px; }
+.login-terms { font-size: 12px; color: var(--text2); line-height: 1.6; }
+.login-terms a { color: var(--primary); text-decoration: none; }
+
+/* ===== ONBOARDING ===== */
+.onboard-page { padding: 60px 24px 24px; }
+.onboard-skip {
+  position: absolute; top: 16px; right: 16px;
+  color: var(--text2); font-size: 14px; cursor: pointer; background: none; border: none;
+}
+.onboard-title { font-size: 28px; font-weight: 700; margin-bottom: 32px; }
+.form-label { font-size: 14px; color: var(--text2); margin-bottom: 8px; display: block; }
+.form-input {
+  width: 100%; padding: 14px 16px; border-radius: 12px;
+  border: 1px solid #333; background: var(--card); color: white;
+  font-size: 15px; outline: none; margin-bottom: 4px;
+}
+.form-input:focus { border-color: var(--primary); }
+.form-hint { font-size: 12px; color: var(--green); margin-bottom: 20px; display: flex; align-items: center; gap: 4px; }
+.avatar-edit {
+  display: flex; flex-direction: column; align-items: center; gap: 8px; margin: 24px 0;
+}
+.avatar-circle {
+  width: 80px; height: 80px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--pink));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+}
+.avatar-edit-btn { color: var(--primary); font-size: 13px; cursor: pointer; background: none; border: none; }
+.onboard-bottom { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: calc(100% - 48px); max-width: 382px; }
+
+/* ===== FOLLOWERS ===== */
+.followers-page { padding: 0 0 0; }
+.page-header {
+  display: flex; align-items: center; padding: 16px; gap: 12px;
+  position: sticky; top: 0; background: var(--bg); z-index: 10;
+}
+.back-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+.page-header-title { font-size: 18px; font-weight: 600; }
+.follower-item {
+  display: flex; align-items: center; padding: 14px 16px; gap: 12px;
+}
+.follower-avatar {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, #3a2a5e, #5a3a7e);
+}
+.fa2 { background: linear-gradient(135deg, #2a4a5e, #5a2a4e); }
+.fa3 { background: linear-gradient(135deg, #4a3a2e, #2a5a4e); }
+.fa4 { background: linear-gradient(135deg, #5a2a3e, #3a4a5e); }
+.follower-info { flex: 1; }
+.follower-name { font-size: 15px; font-weight: 500; }
+.follower-stats { font-size: 12px; color: var(--text2); margin-top: 2px; }
+.follow-btn {
+  padding: 8px 20px; border-radius: 20px; background: var(--primary);
+  color: white; border: none; font-size: 13px; cursor: pointer;
+  transition: transform .1s;
+}
+.follow-btn:active { transform: scale(.95); }
+
+/* ===== MINE PAGE ===== */
+.mine-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px;
+}
+.mine-brand { font-size: 20px; font-weight: 700; }
+.mine-icons { display: flex; gap: 16px; }
+.mine-icons button { background: none; border: none; color: white; font-size: 20px; cursor: pointer; }
+.mine-login-btn {
+  margin: 8px 16px 16px; padding: 14px; border-radius: 12px;
+  background: var(--primary); color: white; text-align: center;
+  font-size: 15px; font-weight: 600; cursor: pointer; border: none; width: calc(100% - 32px);
+}
+.mine-login-btn:active { opacity: .8; }
+.pro-card {
+  margin: 0 16px 12px; padding: 16px; border-radius: 16px;
+  background: linear-gradient(135deg, #2A1F5E, #4A2F7E, #6A3F9E);
+  display: flex; align-items: center; gap: 12px; cursor: pointer;
+  position: relative; overflow: hidden;
+}
+.pro-card::after {
+  content: ''; position: absolute; right: -20px; top: -20px;
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(253,121,168,.15);
+}
+.pro-crown { font-size: 24px; }
+.pro-text { font-size: 16px; font-weight: 600; }
+.pro-tag {
+  margin-left: auto; padding: 4px 12px; border-radius: 12px;
+  background: linear-gradient(135deg, var(--pink), #A855F7);
+  font-size: 11px; font-weight: 600;
+}
+.stat-cards {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  margin: 0 16px 16px;
+}
+.stat-card {
+  padding: 16px; border-radius: 14px; background: var(--card);
+}
+.stat-value { font-size: 20px; font-weight: 700; }
+.stat-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+.menu-list { margin: 0 16px; }
+.menu-item {
+  display: flex; align-items: center; padding: 15px 0; gap: 12px;
+  border-bottom: 1px solid #1a1a25; cursor: pointer;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-icon { font-size: 18px; width: 24px; text-align: center; }
+.menu-text { flex: 1; font-size: 15px; }
+.menu-arrow { color: var(--text2); font-size: 14px; }
+.social-section {
+  margin: 24px 16px; text-align: center;
+}
+.social-label { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
+.social-icons { display: flex; justify-content: center; gap: 16px; }
+.social-icon {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--card);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; cursor: pointer; border: none; color: white;
+}
+
+/* Profile Section (logged in) */
+.profile-section {
+  display: flex; align-items: center; padding: 16px; gap: 14px;
+}
+.profile-avatar {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--pink));
+  display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+.profile-info { flex: 1; }
+.profile-name { font-size: 18px; font-weight: 600; }
+.profile-edit { font-size: 13px; color: var(--text2); margin-top: 2px; cursor: pointer; }
+.profile-stats-row {
+  display: flex; gap: 16px; padding: 0 16px 16px; font-size: 13px; color: var(--text2);
+}
+.profile-stats-row span { color: white; font-weight: 600; }
+
+/* ===== PROFILE EDIT MODAL ===== */
+.modal-overlay {
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.6); z-index: 300;
+  backdrop-filter: blur(4px);
+}
+.modal-overlay.active { display: block; }
+.bottom-sheet {
+  position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: var(--card); border-radius: 20px 20px 0 0;
+  padding: 24px; animation: slideUp .3s ease;
+}
+@keyframes slideUp { from { transform: translateX(-50%) translateY(100%); } to { transform: translateX(-50%) translateY(0); } }
+.sheet-handle {
+  width: 40px; height: 4px; border-radius: 2px; background: #444;
+  margin: 0 auto 20px;
+}
+.sheet-avatar { display: flex; flex-direction: column; align-items: center; gap: 8px; margin-bottom: 24px; }
+
+/* ===== SETTINGS ===== */
+.settings-page { padding: 0; }
+.setting-group {
+  margin: 12px 16px; background: var(--card); border-radius: 14px; overflow: visible;
+}
+.setting-item {
+  display: flex; align-items: center; padding: 15px 16px; gap: 12px;
+  border-bottom: 1px solid #222;
+}
+.setting-item:last-child { border-bottom: none; }
+.setting-label { flex: 1; font-size: 15px; }
+.setting-value { color: var(--text2); font-size: 13px; }
+.toggle {
+  width: 48px; height: 28px; border-radius: 14px;
+  background: #333; position: relative; cursor: pointer;
+  border: none; transition: background .2s;
+}
+.toggle.on { background: var(--primary); }
+.toggle::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: white; transition: transform .2s;
+}
+.toggle.on::after { transform: translateX(20px); }
+.content-level {
+  position: relative; display: inline-block;
+}
+.level-selected {
+  padding: 6px 16px; border-radius: 10px; border: 1px solid var(--primary);
+  background: rgba(108,92,231,0.15); color: white; font-size: 13px; cursor: pointer;
+  font-weight: 600; display: flex; align-items: center; gap: 6px;
+}
+.level-dropdown {
+  display: none; position: absolute; top: -4px; right: -4px;
+  background: var(--card2); border: 1px solid rgba(108,92,231,0.3);
+  border-radius: 12px; overflow: visible; z-index: 999; min-width: 110px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  padding-bottom: 4px;
+}
+.level-dropdown.show { display: block; }
+.level-option {
+  padding: 12px 16px; font-size: 14px; color: var(--text2); cursor: pointer;
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  border: none; background: none; width: 100%; text-align: right;
+}
+.level-option:first-child {
+  border: 2px solid var(--primary); border-radius: 10px;
+  color: white; background: rgba(108,92,231,0.1); margin: 4px; width: calc(100% - 8px);
+  justify-content: center;
+}
+.level-option:not(:first-child) { padding: 10px 16px; }
+.level-option .crown { width: 18px; height: 18px; opacity: 0.6; }
+.level-btn {
+  padding: 6px 16px; border-radius: 20px; border: 1px solid #333;
+  background: transparent; color: var(--text2); font-size: 13px; cursor: pointer;
+}
+.level-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+.setting-logout {
+  text-align: center; padding: 16px; color: var(--danger);
+  font-size: 15px; cursor: pointer;
+}
+.setting-version {
+  text-align: center; padding: 8px; color: var(--text2); font-size: 12px;
+}
+
+/* Delete Modal */
+.delete-modal {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: calc(100% - 48px); max-width: 380px;
+  background: var(--card); border-radius: 20px; padding: 28px; text-align: center;
+}
+.delete-modal h3 { font-size: 18px; margin-bottom: 12px; }
+.delete-modal p { color: var(--text2); font-size: 14px; margin-bottom: 24px; }
+.delete-actions { display: flex; gap: 12px; }
+.delete-actions .btn { flex: 1; }
+
+/* ===== HOME / EXPLORE placeholders ===== */
+.placeholder-page {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 80vh; color: var(--text2);
+}
+.placeholder-page .icon { font-size: 48px; margin-bottom: 16px; }
+.placeholder-page .title { font-size: 18px; font-weight: 600; color: white; }
+</style>
+</head>
+<body>
+
+<!-- Language Toggle -->
+<button class="lang-toggle" onclick="toggleLang()" id="langBtn">中/EN</button>
+
+<!-- ===== PAGE: LOGIN ===== -->
+<div class="page no-tab active" id="page-login">
+  <div class="login-grid">
+    <div class="login-grid-item"><div class="grid-placeholder"></div></div>
+    <div class="login-grid-item"><div class="grid-placeholder gp2"></div></div>
+    <div class="login-grid-item"><div class="grid-placeholder gp3"></div></div>
+    <div class="login-grid-item"><div class="grid-placeholder gp4"></div></div>
+    <div class="login-grid-item"><div class="grid-placeholder gp5"></div></div>
+    <div class="login-grid-item"><div class="grid-placeholder gp6"></div></div>
+  </div>
+  <div class="login-content">
+    <div class="login-logo">M</div>
+    <div class="login-brand">Miko AI</div>
+    <div class="login-sub" data-i18n="loginSub">Sign in & Get Free Credits</div>
+    <div class="login-buttons">
+      <button class="login-btn" onclick="showPage('page-onboard')">
+        <span class="icon">G</span>
+        <span data-i18n="loginGoogle">Continue with Google</span>
+      </button>
+      <button class="login-btn" onclick="showPage('page-onboard')">
+        <span class="icon">🎮</span>
+        <span data-i18n="loginDiscord">Continue with Discord</span>
+      </button>
+      <button class="login-btn" onclick="showPage('page-onboard')">
+        <span class="icon">✉️</span>
+        <span data-i18n="loginEmail">Continue with Email</span>
+      </button>
+    </div>
+    <div class="login-terms">
+      <span data-i18n="loginTerms">By continuing, you agree to our</span>
+      <a href="#">Terms of Service</a> &amp; <a href="#">Privacy Policy</a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: ONBOARDING ===== -->
+<div class="page no-tab" id="page-onboard" style="position:relative;">
+  <button class="onboard-skip" onclick="loginUser()" data-i18n="skip">Skip</button>
+  <div class="onboard-page">
+    <div class="onboard-title" data-i18n="almostThere">Almost there!</div>
+    <label class="form-label" data-i18n="pickUsername">Pick or edit a Username</label>
+    <input class="form-input" value="@mikouser" placeholder="@username">
+    <div class="form-hint">✓ <span data-i18n="usernameAvail">Username available</span></div>
+    
+    <div class="avatar-edit">
+      <label class="form-label" data-i18n="editAvatar">Edit avatar</label>
+      <div class="avatar-circle">😊</div>
+      <button class="avatar-edit-btn" data-i18n="edit">Edit</button>
+    </div>
+    
+    <label class="form-label" data-i18n="referralCode">Referral code</label>
+    <input class="form-input" placeholder="Enter code">
+    
+    <div class="onboard-bottom">
+      <button class="btn btn-primary" onclick="loginUser()" data-i18n="next">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: HOME ===== -->
+<div class="page" id="page-home">
+  <div class="placeholder-page">
+    <div class="icon">🏠</div>
+    <div class="title" data-i18n="homeTitle">Home</div>
+    <p style="margin-top:8px;color:var(--text2)" data-i18n="homeDesc">Discover AI-generated artworks</p>
+  </div>
+</div>
+
+<!-- ===== PAGE: EXPLORE ===== -->
+<div class="page" id="page-explore">
+  <div class="placeholder-page">
+    <div class="icon">🔍</div>
+    <div class="title" data-i18n="exploreTitle">Explore</div>
+    <p style="margin-top:8px;color:var(--text2)" data-i18n="exploreDesc">Browse trending creations</p>
+  </div>
+</div>
+
+<!-- ===== PAGE: ARTWORK ===== -->
+<div class="page" id="page-artwork">
+  <div class="placeholder-page">
+    <div class="icon">🎨</div>
+    <div class="title" data-i18n="artworkTitle">Artwork</div>
+    <p style="margin-top:8px;color:var(--text2)" data-i18n="artworkDesc">Your creative gallery</p>
+  </div>
+</div>
+
+<!-- ===== PAGE: FOLLOWERS ===== -->
+<div class="page no-tab" id="page-followers">
+  <div class="page-header">
+    <button class="back-btn" onclick="showPage('page-mine-loggedin')">←</button>
+    <div class="page-header-title" data-i18n="followers">Followers</div>
+  </div>
+  <div class="follower-item">
+    <div class="follower-avatar"></div>
+    <div class="follower-info">
+      <div class="follower-name">ArtMaster_01</div>
+      <div class="follower-stats">Followers: 1923 | Likes: 82314</div>
+    </div>
+    <button class="follow-btn" data-i18n="followed">Followed</button>
+  </div>
+  <div class="follower-item">
+    <div class="follower-avatar fa2"></div>
+    <div class="follower-info">
+      <div class="follower-name">PixelDream</div>
+      <div class="follower-stats">Followers: 3421 | Likes: 15203</div>
+    </div>
+    <button class="follow-btn" data-i18n="followed">Followed</button>
+  </div>
+  <div class="follower-item">
+    <div class="follower-avatar fa3"></div>
+    <div class="follower-info">
+      <div class="follower-name">CreativeAI</div>
+      <div class="follower-stats">Followers: 892 | Likes: 43210</div>
+    </div>
+    <button class="follow-btn" data-i18n="followed">Followed</button>
+  </div>
+  <div class="follower-item">
+    <div class="follower-avatar fa4"></div>
+    <div class="follower-info">
+      <div class="follower-name">NeonStudio</div>
+      <div class="follower-stats">Followers: 5102 | Likes: 92871</div>
+    </div>
+    <button class="follow-btn" data-i18n="followed">Followed</button>
+  </div>
+</div>
+
+<!-- ===== PAGE: MINE (NOT LOGGED IN) ===== -->
+<div class="page" id="page-mine">
+  <div class="mine-header">
+    <div class="mine-brand">Miko AI</div>
+    <div class="mine-icons">
+      <button>🎮</button>
+      <button onclick="showPage('page-settings')">⚙️</button>
+    </div>
+  </div>
+  <button class="mine-login-btn" onclick="showPage('page-login')" data-i18n="loginRewards">Log in & Claim Rewards</button>
+  
+  <div class="pro-card" onclick="void(0)">
+    <span class="pro-crown">👑</span>
+    <span class="pro-text">Miko AI Pro</span>
+    <span class="pro-tag" data-i18n="upgradePro">Upgrade pro</span>
+  </div>
+  
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-value">230</div>
+      <div class="stat-label">Credits</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" data-i18n="inviteRewards">Invite rewards</div>
+      <div class="stat-label" data-i18n="invitedUsers">3 Invited users</div>
+    </div>
+  </div>
+  
+  <div class="menu-list">
+    <div class="menu-item"><span class="menu-icon">🖼️</span><span class="menu-text" data-i18n="publishedArtworks">Published artworks</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">📁</span><span class="menu-text" data-i18n="collections">Collections</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">❤️</span><span class="menu-text" data-i18n="favorites">Favorites</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">📅</span><span class="menu-text" data-i18n="dailyCheckin">Daily check in</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">🎫</span><span class="menu-text" data-i18n="promoCode">Use promo code</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">⭐</span><span class="menu-text" data-i18n="rateUs">Give us a rate</span><span class="menu-arrow">›</span></div>
+  </div>
+  
+  <div class="social-section">
+    <div class="social-label" data-i18n="followUs">Follow us</div>
+    <div class="social-icons">
+      <button class="social-icon">🎮</button>
+      <button class="social-icon">📷</button>
+      <button class="social-icon">𝕏</button>
+      <button class="social-icon">f</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: MINE (LOGGED IN) ===== -->
+<div class="page" id="page-mine-loggedin">
+  <div class="mine-header">
+    <div class="mine-brand">Miko AI</div>
+    <div class="mine-icons">
+      <button>🎮</button>
+      <button onclick="showPage('page-settings')">⚙️</button>
+    </div>
+  </div>
+  
+  <div class="profile-section">
+    <div class="profile-avatar">😊</div>
+    <div class="profile-info">
+      <div class="profile-name">Nike name</div>
+      <div class="profile-edit" onclick="showModal('modal-profile')"><span data-i18n="editProfile">Edit profile</span> ›</div>
+    </div>
+  </div>
+  <div class="profile-stats-row">
+    <div><span>23</span> <span data-i18n="followersLabel">Followers</span></div>
+    <div onclick="showPage('page-followers')" style="cursor:pointer"><span>2</span> <span data-i18n="followedLabel">Followed</span></div>
+    <div><span>2314</span> <span data-i18n="likedLabel">Liked</span></div>
+  </div>
+  
+  <div class="pro-card">
+    <span class="pro-crown">👑</span>
+    <span class="pro-text">Miko AI Pro</span>
+    <span class="pro-tag" data-i18n="upgradePro">Upgrade pro</span>
+  </div>
+  
+  <div class="stat-cards">
+    <div class="stat-card">
+      <div class="stat-value">230</div>
+      <div class="stat-label">Credits</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" data-i18n="inviteRewards">Invite rewards</div>
+      <div class="stat-label" data-i18n="invitedUsers">3 Invited users</div>
+    </div>
+  </div>
+  
+  <div class="menu-list">
+    <div class="menu-item"><span class="menu-icon">🖼️</span><span class="menu-text" data-i18n="publishedArtworks">Published artworks</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">📁</span><span class="menu-text" data-i18n="collections">Collections</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">❤️</span><span class="menu-text" data-i18n="favorites">Favorites</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">📅</span><span class="menu-text" data-i18n="dailyCheckin">Daily check in</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">🎫</span><span class="menu-text" data-i18n="promoCode">Use promo code</span><span class="menu-arrow">›</span></div>
+    <div class="menu-item"><span class="menu-icon">⭐</span><span class="menu-text" data-i18n="rateUs">Give us a rate</span><span class="menu-arrow">›</span></div>
+  </div>
+  
+  <div class="social-section">
+    <div class="social-label" data-i18n="followUs">Follow us</div>
+    <div class="social-icons">
+      <button class="social-icon">🎮</button>
+      <button class="social-icon">📷</button>
+      <button class="social-icon">𝕏</button>
+      <button class="social-icon">f</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: SETTINGS ===== -->
+<div class="page no-tab" id="page-settings">
+  <div class="page-header">
+    <button class="back-btn" onclick="goBackFromSettings()">←</button>
+    <div class="page-header-title" data-i18n="settings">Settings</div>
+  </div>
+  
+  <div class="pro-card" style="margin-top:8px">
+    <span class="pro-crown">👑</span>
+    <span class="pro-text">Miko AI Pro</span>
+    <span class="pro-tag" data-i18n="upgradePro">Upgrade pro</span>
+  </div>
+  
+  <div class="setting-group">
+    <div class="setting-item">
+      <span class="setting-label" data-i18n="manageSubs">Manage subscriptions</span>
+      <span class="menu-arrow">›</span>
+    </div>
+    <div class="setting-item">
+      <span class="setting-label" data-i18n="contentLevel">Show Content Level</span>
+      <div class="content-level" id="contentLevel">
+        <div class="level-selected" onclick="toggleLevelDropdown(event)">Safe</div>
+        <div class="level-dropdown" id="levelDropdown">
+          <button class="level-option active" onclick="pickLevel(this, 'Safe')">Safe</button>
+          <button class="level-option" onclick="pickLevel(this, 'R+')">R+ <svg class="crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20L19 9l-5 4-2-6-2 6-5-4z"/><rect x="2" y="20" width="20" height="2" rx="1"/></svg></button>
+          <button class="level-option" onclick="pickLevel(this, 'X')">X <svg class="crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 20h20L19 9l-5 4-2-6-2 6-5-4z"/><rect x="2" y="20" width="20" height="2" rx="1"/></svg></button>
+        </div>
+      </div>
+    </div>
+    <div class="setting-item">
+      <span class="setting-label" data-i18n="haptic">Haptic feedback</span>
+      <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="setting-item">
+      <span class="setting-label" data-i18n="notifications">Notifications</span>
+      <button class="toggle" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="setting-item">
+      <span class="setting-label" data-i18n="blacklist">Blacklist</span>
+      <span class="menu-arrow">›</span>
+    </div>
+  </div>
+  
+  <div class="setting-group">
+    <div class="setting-item"><span class="setting-label" data-i18n="privacyPolicy">Privacy policy</span><span class="menu-arrow">›</span></div>
+    <div class="setting-item"><span class="setting-label" data-i18n="termsOfUse">Terms of use</span><span class="menu-arrow">›</span></div>
+    <div class="setting-item"><span class="setting-label" data-i18n="contactUs">Contact us</span><span class="menu-arrow">›</span></div>
+    <div class="setting-item"><span class="setting-label" data-i18n="aboutMiko">About MikoAI</span><span class="menu-arrow">›</span></div>
+    <div class="setting-item" onclick="showModal('modal-delete')"><span class="setting-label" style="color:var(--danger)" data-i18n="deleteAccount">Delete account</span></div>
+  </div>
+  
+  <div class="setting-logout" onclick="logoutUser()" data-i18n="logout">Log out</div>
+  <div class="setting-version">Miko AI v 2.0.1</div>
+</div>
+
+<!-- ===== MODAL: PROFILE EDIT ===== -->
+<div class="modal-overlay" id="modal-profile" onclick="closeModal(event, 'modal-profile')">
+  <div class="bottom-sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <div class="sheet-avatar">
+      <div class="avatar-circle" style="width:72px;height:72px;font-size:28px">😊</div>
+      <button class="avatar-edit-btn" data-i18n="edit">Edit</button>
+    </div>
+    <label class="form-label" data-i18n="nickname">Nick name</label>
+    <input class="form-input" value="Nike name" style="margin-bottom:16px">
+    <label class="form-label">Bio</label>
+    <textarea class="form-input" style="height:80px;resize:none;margin-bottom:24px" placeholder="Tell us about yourself..."></textarea>
+    <button class="btn btn-primary" onclick="hideModal('modal-profile')" data-i18n="continue">Continue</button>
+  </div>
+</div>
+
+<!-- ===== MODAL: DELETE ACCOUNT ===== -->
+<div class="modal-overlay" id="modal-delete" onclick="closeModal(event, 'modal-delete')">
+  <div class="delete-modal" onclick="event.stopPropagation()">
+    <h3 data-i18n="deleteAccount">Delete account</h3>
+    <p data-i18n="deleteConfirm">Are you sure to delete account and all data?</p>
+    <div class="delete-actions">
+      <button class="btn btn-outline" onclick="hideModal('modal-delete')" data-i18n="cancel">Cancel</button>
+      <button class="btn btn-danger" onclick="hideModal('modal-delete')" data-i18n="delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TAB BAR ===== -->
+<div class="tab-bar" id="tabBar" style="display:none">
+  <button class="tab-item active" onclick="switchTab('page-home', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+    <span data-i18n="tabHome">Home</span>
+  </button>
+  <button class="tab-item" onclick="switchTab('page-explore', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <span data-i18n="tabExplore">Explore</span>
+  </button>
+  <button class="tab-center" onclick="void(0)">
+    <svg viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></svg>
+  </button>
+  <button class="tab-item" onclick="switchTab('page-artwork', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+    <span data-i18n="tabArtwork">Artwork</span>
+  </button>
+  <button class="tab-item" onclick="switchTab(loggedIn?'page-mine-loggedin':'page-mine', this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    <span data-i18n="tabMine">Mine</span>
+  </button>
+</div>
+
+<script>
+let loggedIn = false;
+let lang = 'en';
+
+const i18n = {
+  loginSub: { en: 'Sign in & Get Free Credits', zh: '登录并获取免费积分' },
+  loginGoogle: { en: 'Continue with Google', zh: '使用 Google 登录' },
+  loginDiscord: { en: 'Continue with Discord', zh: '使用 Discord 登录' },
+  loginEmail: { en: 'Continue with Email', zh: '使用邮箱登录' },
+  loginTerms: { en: 'By continuing, you agree to our', zh: '继续即表示您同意我们的' },
+  almostThere: { en: 'Almost there!', zh: '即将完成！' },
+  pickUsername: { en: 'Pick or edit a Username', zh: '选择或编辑用户名' },
+  usernameAvail: { en: 'Username available', zh: '用户名可用' },
+  editAvatar: { en: 'Edit avatar', zh: '编辑头像' },
+  edit: { en: 'Edit', zh: '编辑' },
+  referralCode: { en: 'Referral code', zh: '推荐码' },
+  next: { en: 'Next', zh: '下一步' },
+  skip: { en: 'Skip', zh: '跳过' },
+  followers: { en: 'Followers', zh: '关注者' },
+  followed: { en: 'Followed', zh: '已关注' },
+  loginRewards: { en: 'Log in & Claim Rewards', zh: '登录并领取奖励' },
+  upgradePro: { en: 'Upgrade pro', zh: '升级 Pro' },
+  inviteRewards: { en: 'Invite rewards', zh: '邀请奖励' },
+  invitedUsers: { en: '3 Invited users', zh: '3 位已邀请用户' },
+  publishedArtworks: { en: 'Published artworks', zh: '已发布作品' },
+  collections: { en: 'Collections', zh: '收藏夹' },
+  favorites: { en: 'Favorites', zh: '喜欢' },
+  dailyCheckin: { en: 'Daily check in', zh: '每日签到' },
+  promoCode: { en: 'Use promo code', zh: '使用优惠码' },
+  rateUs: { en: 'Give us a rate', zh: '给我们评分' },
+  followUs: { en: 'Follow us', zh: '关注我们' },
+  editProfile: { en: 'Edit profile', zh: '编辑资料' },
+  followersLabel: { en: 'Followers', zh: '关注者' },
+  followedLabel: { en: 'Followed', zh: '已关注' },
+  likedLabel: { en: 'Liked', zh: '获赞' },
+  settings: { en: 'Settings', zh: '设置' },
+  manageSubs: { en: 'Manage subscriptions', zh: '管理订阅' },
+  contentLevel: { en: 'Show Content Level', zh: '内容分级显示' },
+  haptic: { en: 'Haptic feedback', zh: '触觉反馈' },
+  notifications: { en: 'Notifications', zh: '通知' },
+  blacklist: { en: 'Blacklist', zh: '黑名单' },
+  privacyPolicy: { en: 'Privacy policy', zh: '隐私政策' },
+  termsOfUse: { en: 'Terms of use', zh: '使用条款' },
+  contactUs: { en: 'Contact us', zh: '联系我们' },
+  aboutMiko: { en: 'About MikoAI', zh: '关于 MikoAI' },
+  deleteAccount: { en: 'Delete account', zh: '删除账号' },
+  deleteConfirm: { en: 'Are you sure to delete account and all data?', zh: '确定要删除账号和所有数据吗？' },
+  cancel: { en: 'Cancel', zh: '取消' },
+  delete: { en: 'Delete', zh: '删除' },
+  logout: { en: 'Log out', zh: '退出登录' },
+  nickname: { en: 'Nick name', zh: '昵称' },
+  continue: { en: 'Continue', zh: '继续' },
+  tabHome: { en: 'Home', zh: '首页' },
+  tabExplore: { en: 'Explore', zh: '探索' },
+  tabArtwork: { en: 'Artwork', zh: '作品' },
+  tabMine: { en: 'Mine', zh: '我的' },
+  homeTitle: { en: 'Home', zh: '首页' },
+  homeDesc: { en: 'Discover AI-generated artworks', zh: '发现AI生成的艺术作品' },
+  exploreTitle: { en: 'Explore', zh: '探索' },
+  exploreDesc: { en: 'Browse trending creations', zh: '浏览热门创作' },
+  artworkTitle: { en: 'Artwork', zh: '作品' },
+  artworkDesc: { en: 'Your creative gallery', zh: '你的创意画廊' },
+};
+
+function toggleLang() {
+  lang = lang === 'en' ? 'zh' : 'en';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.dataset.i18n;
+    if (i18n[key]) el.textContent = i18n[key][lang];
+  });
+}
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const noTab = document.getElementById(id).classList.contains('no-tab');
+  document.getElementById('tabBar').style.display = noTab ? 'none' : 'flex';
+}
+
+function switchTab(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('tabBar').style.display = 'flex';
+}
+
+function loginUser() {
+  loggedIn = true;
+  showPage('page-mine-loggedin');
+  document.getElementById('tabBar').style.display = 'flex';
+  // activate mine tab
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-item')[4].classList.add('active');
+}
+
+function logoutUser() {
+  loggedIn = false;
+  showPage('page-login');
+  document.getElementById('tabBar').style.display = 'none';
+}
+
+function goBackFromSettings() {
+  showPage(loggedIn ? 'page-mine-loggedin' : 'page-mine');
+  document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-item')[4].classList.add('active');
+}
+
+function showModal(id) { document.getElementById(id).classList.add('active'); }
+function hideModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeModal(e, id) { if (e.target === document.getElementById(id)) hideModal(id); }
+
+function selectLevel(btn) {
+  btn.parentElement.querySelectorAll('.level-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function toggleLevelDropdown(e) {
+  if (e) e.stopPropagation();
+  document.getElementById('levelDropdown').classList.toggle('show');
+}
+
+function pickLevel(btn, val) {
+  document.querySelectorAll('.level-option').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelector('.level-selected').textContent = val;
+  document.getElementById('levelDropdown').classList.remove('show');
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.content-level')) {
+    var dd = document.getElementById('levelDropdown');
+    if (dd) dd.classList.remove('show');
+  }
+});
+</script>
+</body>
+</html>
